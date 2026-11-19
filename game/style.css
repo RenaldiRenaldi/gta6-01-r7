@@ -40,3 +40,44 @@ canvas:has(+.safehouse){display:block;width:100%;height:auto;border:1px solid #8
 .district-ledger div{border-left:3px solid var(--teal);padding:3px 6px}
 .booking-inset{display:block;width:110px;margin:5px 0 0;border:1px solid #bc8ca2}
 @media(max-height:650px){.title-logo{top:4%}.title-logo h1{font-size:clamp(48px,12vw,125px)}.title-logo h2{margin-top:8px}.main-menu{top:37%}.main-menu button{padding:3px 5px}.title-slots{bottom:5%}}
+/* Showcase framing and a shared navy, gold and teal interface. */
+:root{--wash:#102338f0;--peach:#ffdb93;--teal:#79efdf}
+.panel{background:linear-gradient(130deg,#132840ee,var(--wash));border-color:#73939a;border-top-color:#e9ba66}
+.abilities button{background:#142c41ed;border-color:#6db5af}
+.abilities kbd{background:#ffd079}
+.hud-left{grid-template-areas:"objective" "roster" "vitals"}
+.hud-left .objective{grid-area:objective}.hud-left .roster{grid-area:roster}.hud-left .vitals{grid-area:vitals}
+.hud-map canvas{border-radius:11px;border-color:#e7bf73}
+body[data-scene=hero] .dialogue,.dialogue{bottom:3%;left:51%;width:min(410px,38vw)}
+.main-menu{top:39%;grid-template-columns:1fr;width:min(245px,34vw);gap:4px}
+.main-menu button{background:#101d32df;border-color:#739298;border-left-color:#f4bd6a;padding:4px 10px}
+.main-menu button:first-child{background:#a0444a}
+.title-slots{left:auto;right:4%;bottom:10%;width:min(320px,31vw)}
+.title-logo{top:5%;left:4%}
+.title-logo h1{font-size:clamp(52px,13vw,166px)}
+.title-logo h2{margin-top:10px}
+.stats header{border-top:2px solid #edbd68;padding-top:8px}
+.stats-wallet{margin-left:auto;margin-right:18px;color:var(--teal);font-size:1.6rem}
+.stats-grid{grid-template-columns:minmax(180px,.82fr) minmax(360px,1.92fr) minmax(245px,1fr);align-items:start}
+.map-column{grid-column:2;grid-row:1}.stats-side{grid-column:1;grid-row:1}
+.career-column,.records-extra{display:grid;gap:8px;align-content:start}
+.career-column{grid-column:3;grid-row:1}.records-extra{grid-column:2/4;grid-row:2;grid-template-columns:1fr 1fr}
+.progress-row{margin:3px 0}
+.ring{width:106px;background:radial-gradient(circle closest-side,#172739 79%,transparent 81%),conic-gradient(#ffd17b var(--value),#3d5664 0)}
+.safehouse{grid-template-columns:repeat(3,1fr)}
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:1fr 1.5fr}
+  .career-column{grid-column:1;grid-row:2}
+  .records-extra{grid-column:2;grid-template-columns:1fr}
+}
+@media(max-width:570px){
+  .stats-grid{display:flex;flex-direction:column}.stats-grid>*{width:100%}
+}
+body[data-scene=hero] .dialogue,body[data-scene=market] .dialogue{left:58%;width:min(370px,35vw);bottom:2%}
+body[data-scene=market] .drive strong:empty,body[data-scene=market] .drive b:empty{display:none}
+.stats header h1{font-size:clamp(23px,4vw,45px)}
+.stats .records-extra canvas:has(+.safehouse){max-height:48px;object-fit:cover}
+.stats .records-extra .safehouse{margin:3px 0;font-size:17px}
+.stats .booking-inset{width:76px;float:right;margin-top:-57px}
+.stats .medals small{margin:0}
+body[data-scene=stats]{scrollbar-color:#5a777f #142035}

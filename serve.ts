@@ -1,4 +1,4 @@
-// Serve the offline game on loopback for local play and Chromium capture.
+// Serve the offline game on loopback for offline play and browser capture.
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';

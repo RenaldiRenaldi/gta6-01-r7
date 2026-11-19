@@ -1,6 +1,26 @@
 [
-  { "name": "1-summer-hero.jpg", "query": "?shot=hero&seed=7", "width": 1280, "height": 860 },
-  { "name": "2-spring-market.jpg", "query": "?shot=market&seed=7", "width": 1280, "height": 1400, "scale": 0.9 },
-  { "name": "3-stats.jpg", "query": "?shot=stats&seed=7", "width": 720, "height": 1280 },
-  { "name": "4-title.jpg", "query": "?shot=title&seed=7", "width": 1280, "height": 860 }
+  {
+    "name": "1-summer-hero.jpg",
+    "query": "?shot=hero&seed=7",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "name": "2-spring-market.jpg",
+    "query": "?shot=market&seed=7",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "name": "3-stats.jpg",
+    "query": "?shot=stats&seed=7",
+    "width": 1280,
+    "height": 720
+  },
+  {
+    "name": "4-title.jpg",
+    "query": "?shot=title&seed=7",
+    "width": 1280,
+    "height": 720
+  }
 ]

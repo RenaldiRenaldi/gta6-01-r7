@@ -1,4 +1,4 @@
-# Local dossier output and development files
+# Local package output and development files
 /out/
 /.DS_Store
 /.env

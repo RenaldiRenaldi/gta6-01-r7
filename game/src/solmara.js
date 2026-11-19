@@ -8,6 +8,7 @@ const slots = read('slots',[null,null,null]);
 const options = {...{music:45,sfx:65,quality:3,hud:'CLASSIC'},...read('options',{})};
 const sceneShot = new URLSearchParams(location.search).get('shot');
 const shot = ['hero','market','stats','title'].includes(sceneShot) ? sceneShot : '';
+if(shot) options.hud='CLASSIC';
 const showcaseSlots = [sample(),{...sample(),debt:6,cash:5420,bank:22300,elapsed:10842},null];
 let s = shot ? sample() : fresh();
 let scene = shot || 'title', previous = 'title', mode = '', pane = '', slot = 0, roaming = false, active = false;
@@ -16,13 +17,12 @@ let challenge=null, focusHeld=false;
 let mapTarget = null;
 const keys = new Set();
 if(shot==='hero') Object.assign(s,{heat:6,evidence:7,speed:163,stage:2,remaining:34,hp:86,energy:67,focus:91,x:1034,y:528});
-if(shot==='market') Object.assign(s,{heat:3,evidence:6,stage:1,mask:true,remaining:42,mode:1,x:483,y:327});
+if(shot==='market') Object.assign(s,{heat:3,evidence:6,stage:1,mask:false,remaining:42,mode:1,x:483,y:327});
 const runScenes = ['play','market','vault'];
 const button = (id,lang) => '<button data-action="'+id+'">'+lang+'</button>';
 const box = (heading,body,cls='') => '<section class="panel '+cls+'"><h3>'+heading+'</h3>'+body+'</section>';
 const bar = (n,max) => '<span class="bar"><i style="width:'+Math.max(0,Math.min(100,n/max*100))+'%"></i></span>';
 const time = n => Math.floor(n/60).toString().padStart(2,'0')+':'+Math.floor(n%60).toString().padStart(2,'0');
-const me = () => s.who?'Mara':'Dani';
 const profile = () => s.loud>s.quiet+2?'BRUTAL':s.quiet>s.loud+2?'HANTU':'LICIN';
 const missionIndex = () => shot==='market'?0:Math.min(s.debt,11);
 const mission = () => debts[missionIndex()];
@@ -44,7 +44,12 @@ function save(i){
   slots[i]=copy;slot=i;write('slots',slots);
 }
 function start(state=fresh(), free=false){
-  s=structuredClone(state);roaming=free;active=true;mapTarget=null;challenge=null;pane='';tip=free?'Jelajahi kota sesukamu.':'Skor gampang. Lalu semuanya berantakan.';
+  s=structuredClone(state);
+  // Remove retired state fields from saves created before the solo update.
+  delete s.who;
+  delete s.duo;
+  s.radio%=radio.length;
+  roaming=free;active=true;mapTarget=null;challenge=null;pane='';tip=free?'Jelajahi kota sesukamu.':'Skor gampang. Lalu semuanya berantakan.';
   if(!free && state.debt===0 && state.stage<2)s.mode=1;
   nextMessage=frame+240;setScene(!free && state.debt===0 && state.stage<2?'market':!free&&state.debt===11&&state.stage===2?'vault':'play');
 }
@@ -61,41 +66,41 @@ function title(){
   return '<header class="title-logo"><span>JAKARTA AFTER DARK</span><h1>SOLMARA</h1><h2>TWELVE DEBTS</h2></header><nav class="main-menu" aria-label="Main menu">'+[['continue','CONTINUE'],['new','NEW GAME'],['load','LOAD GAME'],['save','SAVE GAME'],['settings','SETTINGS'],['roam','FREE ROAM'],['stats','PROGRESSION'],['file','WANTED FILE']].map(([id,t])=>button(id,t)).join('')+'</nav><section class="title-slots">'+slotList()+'</section><footer>An original open-world crime story in a city that never sleeps · Keyboard &amp; mouse</footer>';
 }
 function stars(){
-  return '<div class="stars" aria-label="'+s.heat+' dari 6 bintang">'+Array.from({length:6},(_,i)=>'<span class="'+(i<s.heat?'hot':'cold')+'">'+(i<s.heat&& !(scene==='market'&&i===s.heat-1)?'★':'☆')+'</span>').join('')+'</div>';
+  return '<div class="stars" aria-label="'+s.heat+' dari 6 bintang">'+Array.from({length:6},(_,i)=>'<span class="'+(i<s.heat?'hot':'cold')+'">'+(i<s.heat?'★':'☆')+'</span>').join('')+'</div>';
 }
 function phoneBody(){
   let content;
   if(phone==='CEK MOBIL') content='<b>MARINER GT</b><p>Nilai jual $8,200 · Keamanan tinggi</p>'+(s.evidence&1?'<p>TRACKER AKTIF · Buang mobil ini!</p>':'<p>Pelacak tidak aktif</p>');
   else if(phone==='TEKSI') content='<p>Pesan kendaraan ke Kuningan atau dermaga.</p>'+button('taxi-0','KUNINGAN')+button('taxi-1','DERMAGA');
   else content='<article><b>@sorekening</b><p>Komodo bikin macet di tepi pantai 🦎</p></article><article><b>@kanalbeat</b><p>Polisi di Rasuna. Putar balik!</p></article><article><b>@luzmalam</b><p>Balap liar malam ini · Old Coral</p></article>';
-  return '<div class="phone-contents"><div class="live">● LIVE · 12,4rb menonton</div><nav>'+['JEPRET','CEK MOBIL','TEKSI'].map(n=>button('phone-'+n,n)).join('')+'</nav>'+content+'</div>';
+  return '<div class="phone-contents"><div class="live">● LIVE — 12,4rb menonton</div><nav>'+['JEPRET','CEK MOBIL','TEKSI'].map(n=>button('phone-'+n,n)).join('')+'</nav>'+content+'</div>';
 }
 function wheel(items){
-  const slots = items?['Bandana','Kacamata','Topi','—','—','—','—','—']:['Tinju',s.who?'Arus .22':'Teras 9',s.who?'Vega .38':'Setia .45','Shotgun','Rifle','—','—','—'];
+  const slots = items?['Bandana','Kacamata','Topi','—','—','—','—','—']:['Tinju','Teras 9','Setia .45','Shotgun','Rifle','—','—','—'];
   return '<div class="wheel"><nav>'+button('wheel','WEAPONS')+button('items','ITEMS')+'</nav><div class="dial">'+slots.map((n,i)=>'<button data-action="equip-'+i+'" style="--a:'+(i*45)+'deg"><b>'+(i+1)+'</b><small>'+n+'</small></button>').join('')+'<strong>'+(items?'PAKAI':'LOADOUT')+'</strong></div></div>';
 }
 function hud(){
   const [name,type,district,goal]=mission();
   const action=shot==='hero'?'Lolos dari pengejaran':s.stage===0?'Capai lokasi':s.stage===1||scene==='vault'?goal:s.stage===2?'Bawa hasil ke titik temu':'Temui kru';
   const next=['Mulai tugas','Bawa hasil','Temui kru','Debrief'][s.stage]||'Simpan progres';
-  const evidence=['MOBIL DIKENAL','BAJU DIKENAL','BERDUA'].filter((_,i)=>s.evidence&(1<<i)).map(e=>'<span>'+e+'</span>').join('');
+  const evidence=['MOBIL DIKENAL','BAJU DIKENAL','IDENTITAS DIKENAL'].filter((_,i)=>s.evidence&(1<<i)).map(e=>'<span>'+e+'</span>').join('');
   const season=scene==='hero'?seasons[0]:shot==='market'?seasons[1]:seasons[Math.floor(missionIndex()/3)];
   const unitCount=s.heat===6?9:s.heat;
   const selectedUnits=s.heat>=4?units:units.slice(4,4+unitCount);
   const roster=s.heat?box('CODE '+(s.heat===6?5:s.heat)+' <em>'+unitCount+' UNITS</em>',selectedUnits.slice(0,Math.min(unitCount,5)).map(([n,status],i)=>'<div class="unit"><b>'+n+'</b><span>'+status+'</span><small>'+(22+i*37)+' m</small></div>').join('')+(unitCount>5?'<small>+4 more units</small>':''),'roster'):'';
-  return '<div class="hud '+options.hud.toLowerCase()+'"><div class="hud-left">'+box('SOLMARA <em>'+season+'</em>',[['♥ HEALTH',s.hp],['ϟ ENERGY',s.energy],['◉ FOCUS',s.focus]].map(([n,v],i)=>'<div class="meter m'+i+'"><b>'+n+'</b>'+bar(v,100)+'<small>'+Math.round(v)+'</small></div>').join(''),'vitals')+box(roaming?'FREE ROAM':s.debt===12&&!shot?'STORY COMPLETE':'DEBT '+(missionIndex()+1)+'/12 · '+type,'<h2>'+(roaming?'Kuningan bebas':name)+'</h2>'+(roaming||s.debt===12&&!shot?'<small>Jelajahi jalan, pesisir, dan kanal.</small>':'<div class="mission-stage">STAGE '+(s.stage+1)+'/4 <em>'+time(s.remaining)+'</em></div><strong>'+action+'</strong><small>NEXT · '+next+'</small>'),'objective')+roster+'</div><div class="hud-right">'+box('CASH <em>'+money(s.cash)+'</em>','<h3>BANK <em>'+money(s.bank)+'</em></h3>'+stars()+(s.heat?'<small class="heat">HEAT · POLISI MENCARI</small>':'')+'<div class="evidence">'+evidence+'</div>','wallet')+box('CREW RATING',rankPanel()+'<small>◆ Golden Komodo '+s.komodos.length+'/20</small>','rank')+box('LOADOUT · '+me().toUpperCase(),'<strong>'+(s.who?'Vega .38':'Teras 9')+' · '+(s.who?'Arus .22':'Setia .45')+'</strong><small>DIBAWA · 2 pistol tersembunyi</small><small>DI BAGASI · shotgun + rifle</small>','loadout')+'<div class="abilities">'+crews.map(([k,n,role])=>button('ability-'+k.toLowerCase(),'<kbd>'+k+'</kbd><b>'+n+'</b><small>'+role+'</small>')).join('')+'</div></div><section class="hud-map"><div class="area"><b>'+(scene==='hero'?'KUMALA STRAND':district.toUpperCase())+'</b><small>JL. RASUNA SAID · KANAL RASUNA</small></div><canvas id="minimap" width="240" height="240" aria-label="Minimap GPS"></canvas><div class="mini-profile">CRIMINAL PROFILE · '+profile()+'</div></section><div class="dialogue"><span class="live">● LIVE · 12,4rb menonton</span><div class="panel"><b>'+(['MARA SOL','INES VEGA','LUZ MORENO'][missionIndex()%3])+'</b><p>'+(tip || (scene==='hero'?'Dani, ambil jalur pantai. Aku ikut denganmu.':scene==='market'?'Dani, aku jaga pintunya. Ambil uangnya.':'Aku di jalur ini bersamamu, '+me()+'.'))+'</p></div><small>DUO · PARTNERS IN CRIME · '+s.duo+'/6</small>'+bar(s.duo,6)+button('switch','TAB · SWITCH → '+(s.who?'DANI':'MARA'))+'</div><div class="drive"><strong>'+Math.round(s.speed)+'</strong><b>'+(s.mode===2?'AIR ':'')+'KM/H</b><small>'+['MARINER GT','ON FOOT','MARA’S KITE','BAY JET SKI'][s.mode]+'</small><small>♫ '+radio[s.radio]+'</small></div><nav class="controls">'+button('pause','ESC · PAUSE')+button('stats','M · STATS')+button('phone','P · PHONE')+button('wheel','Q · GEAR')+'</nav>'+(shot==='market'?'<div class="shot-wheel">'+wheel(true)+'</div><section class="shot-phone panel">'+phoneBody()+'</section>':'')+'</div>';
+  return '<div class="hud '+options.hud.toLowerCase()+'"><div class="hud-left">'+box('SOLMARA <em>'+season+'</em>',[['♥ HEALTH',s.hp],['ϟ ENERGY',s.energy],['◉ FOCUS',s.focus]].map(([n,v],i)=>'<div class="meter m'+i+'"><b>'+n+'</b>'+bar(v,100)+'<small>'+Math.round(v)+'</small></div>').join(''),'vitals')+box(roaming?'FREE ROAM':s.debt===12&&!shot?'STORY COMPLETE':'DEBT '+(missionIndex()+1)+'/12 · '+type,'<h2>'+(roaming?'Kuningan bebas':name)+'</h2>'+(roaming||s.debt===12&&!shot?'<small>Jelajahi jalan, pesisir, dan kanal.</small>':'<div class="mission-stage">STAGE '+(s.stage+1)+'/4 <em>'+time(s.remaining)+'</em></div><strong>'+action+'</strong><small>NEXT · '+next+'</small>'),'objective')+roster+'</div><div class="hud-right">'+box('CASH <em>'+money(s.cash)+'</em>','<h3>BANK <em>'+money(s.bank)+'</em></h3><small>TOTAL '+money(s.cash+s.bank)+' · '+s.debt+'/12 DEBTS</small>'+stars()+(s.heat?'<small class="heat">HEAT · POLISI MENCARI</small>':'')+'<div class="evidence">'+evidence+'</div>','wallet')+box('CREW RATING',rankPanel()+'<small>◆ Golden Komodo '+s.komodos.length+'/20</small>','rank')+box('LOADOUT · DANI','<strong>Teras 9 · Setia .45</strong><small>DIBAWA · 2 pistol tersembunyi</small><small>DI BAGASI · shotgun + rifle</small>','loadout')+'<div class="abilities">'+crews.map(([k,n,role])=>button('ability-'+k.toLowerCase(),'<kbd>'+k+'</kbd><b>'+n+'</b><small>'+role+'</small>')).join('')+'</div></div><section class="hud-map"><div class="area"><b>'+(scene==='hero'?'KUMALA STRAND':district.toUpperCase())+'</b><small>JL. RASUNA SAID · KANAL RASUNA</small></div><canvas id="minimap" width="240" height="240" aria-label="Minimap GPS"></canvas><div class="mini-profile">CRIMINAL PROFILE · '+profile()+'</div></section><div class="dialogue"><span class="live">● LIVE — 12,4rb menonton</span><div class="panel"><b>'+(shot?'LUZ MORENO':['LUZ MORENO','INES VEGA','LIO'][missionIndex()%3])+'</b><p>'+(tip || (scene==='hero'?'Dani, ambil jalur pantai. Jalur di depan masih kosong.':scene==='market'?'Dani, aku jaga pintunya. Ambil uangnya.':'Aku di jalur ini bersamamu, Dani.'))+'</p></div></div><div class="drive"><strong>'+(shot==='market'?'':Math.round(s.speed))+'</strong><b>'+(shot==='market'?'':(s.mode===2?'AIR ':'')+'KM/H')+'</b><small>'+['MARINER GT','ON FOOT','KITE OVER SERIBU','BAY JET SKI'][s.mode]+'</small><small>♫ '+radio[s.radio]+'</small></div><nav class="controls">'+button('pause','ESC · PAUSE')+button('stats','M · STATS')+button('phone','P · PHONE')+button('wheel','Q · GEAR')+'</nav>'+'</div>';
 }
 function row(label,n,max){return '<div class="progress-row"><span>'+label+'</span>'+bar(n,max)+'<strong>'+n+'/'+max+'</strong></div>';}
 function stats(){
   const jobRows=jobs.map(([n,max],i)=>row(n,s.jobs[i],max)).join('');
-  const typeRows=[['Robbery',4],['Heist',2],['Chase',6],['Infiltration',2]].map(([n,max])=>row(n,debts.slice(0,s.debt).filter(d=>d[1]===n).length,max)).join('');
+  const typeRows=[...new Set(debts.map(d=>d[1]))].map(type=>[type,debts.filter(d=>d[1]===type).length]).map(([n,max])=>row(n,debts.slice(0,s.debt).filter(d=>d[1]===n).length,max)).join('');
   const totals=['Cars stolen','Cops escaped','Distance driven','People taken out','Crew abilities','Hidden by locals'].map((n,i)=>'<div><strong>'+(i===2?s.career[i].toFixed(1)+' km':s.career[i])+'</strong><small>'+n+'</small></div>').join('');
   const grades=Array.from({length:12},(_,i)=>'<span class="medal '+(s.grades[i]||'')+'"><small>'+String(i+1).padStart(2,'0')+'</small><b>'+(s.grades[i]||'·')+'</b></span>').join('');
-  return '<div class="stats"><header><div><small>SOLMARA CITY RECORDS</small><h1>PROGRESSION</h1></div>'+button('back','ESC · KEMBALI')+'</header><div class="stats-grid"><div class="map-column">'+box('KUNINGAN <em>JAKARTA · 11 DISTRICTS</em>','<canvas id="fullmap" width="900" height="555" aria-label="Peta distrik Jakarta"></canvas><small>◆ Objective &nbsp; · &nbsp; Klik peta saat free roam untuk menandai tujuan</small>','atlas')+'<div class="stats-pair">'+box('CRIMINAL PROFILE','<h2>'+profile()+'</h2><small>DUO · Dani &amp; Mara</small>'+row('Misi berdua',s.duo,6)+rankPanel())+box('CAREER', '<div class="career">'+totals+'</div>')+'</div>'+box('SAFEHOUSE · APARTEMEN DANI & MARA','<div class="safehouse"><span>▰<small>Rottweiler tidur</small></span><span>▤<small>Kulkas & TV</small></span><span>▥<small>Loker senjata</small></span><span>♧<small>Rak pakaian</small></span></div><small>PROPERTI · Apartemen + Bengkel Lio</small>'+button('outfit','GANTI OUTFIT · HAPUS HEAT'))+'</div><div class="stats-side">'+box('CITY COMPLETION','<div class="ring" style="--value:'+progress(s)+'%"><b>'+progress(s)+'%</b><small>COMPLETE</small></div>'+row('Story debts',s.debt,12)+row('Golden Komodo',s.komodos.length,20)+row('Crew recruited',Math.min(3,s.debt),3)+row('Gold ratings',s.grades.filter(g=>g==='G').length,12)+jobRows+typeRows)+box('MISSION RATINGS · GOLD / SILVER / BRONZE','<div class="medals">'+grades+'</div>')+'</div></div><div class="stats-pair">'+box('SAVE SLOTS',slotList())+box('SOLMARA RADIO',radio.map(n=>'<small>♫ '+n+'</small>').join('')+'<hr><b>WANTED · FILE No. 07-122</b><small>DANI CRUZ · ★★★★★★</small>'+button('file','BOOKING PHOTO'))+'</div></div>';
+  return '<div class="stats"><header><div><small>SOLMARA CITY RECORDS</small><h1>PROGRESSION</h1></div><strong class="stats-wallet">'+money(s.cash+s.bank)+'</strong>'+button('back','ESC · KEMBALI')+'</header><div class="stats-grid"><div class="map-column">'+box('KUNINGAN <em>JAKARTA · 11 DISTRICTS</em>','<canvas id="fullmap" width="900" height="670" aria-label="Peta distrik Jakarta"></canvas><small>◆ Objective &nbsp; · &nbsp; Klik peta saat free roam untuk menandai tujuan</small>','atlas')+'</div><div class="career-column">'+box('CRIMINAL PROFILE','<h2>'+profile()+'</h2>'+rankPanel())+box('CAREER', '<div class="career">'+totals+'</div>')+box('SAVE SLOTS',slotList()+button('save','SAVE GAME'))+'</div><div class="records-extra">'+box('SAFEHOUSE · APARTEMEN DANI','<div class="safehouse"><span>▤<small>Kulkas & TV</small></span><span>▥<small>Loker senjata</small></span><span>♧<small>Rak pakaian</small></span></div><small>PROPERTI · Apartemen + Bengkel Lio</small>'+button('outfit','GANTI OUTFIT · HAPUS HEAT'))+box('SOLMARA RADIO',radio.map(n=>'<small>♫ '+n+'</small>').join('')+'<hr><b>WANTED · FILE No. 07-122</b><small>DANI CRUZ · ★★★★★★</small>'+button('file','BOOKING PHOTO'),'records-radio')+'</div><div class="stats-side">'+box('CITY COMPLETION','<div class="ring" style="--value:'+progress(s)+'%"><b>'+progress(s)+'%</b><small>COMPLETE</small></div>'+row('Story debts',s.debt,12)+row('Golden Komodo',s.komodos.length,20)+row('Crew recruited',Math.min(3,s.debt),3)+row('Gold ratings',s.grades.filter(g=>g==='G').length,12)+jobRows+typeRows)+box('MISSION RATINGS · GOLD / SILVER / BRONZE','<div class="medals">'+grades+'</div>')+'</div></div></div>';
 }
 function installRecords(){
   const stats = screen.querySelector('.stats');
-  const radioPanel = stats.lastElementChild.lastElementChild;
+  const radioPanel = stats.querySelector('.records-radio');
   const portrait = document.createElement('canvas');
   portrait.width=240;
   portrait.height=160;
@@ -109,7 +114,7 @@ function installRecords(){
   stats.append(district);
 }
 function settings(){
-  return '<label>MUSIC <input type="range" min="0" max="100" data-setting="music" value="'+options.music+'"></label><label>SFX <input type="range" min="0" max="100" data-setting="sfx" value="'+options.sfx+'"></label><label>GRAPHICS <select data-setting="quality">'+['LOW','MEDIUM','HIGH'].map((t,i)=>'<option value="'+(i+1)+'" '+(i+1===options.quality?'selected':'')+'>'+t+'</option>').join('')+'</select></label><label>HUD <select data-setting="hud">'+['FADE','CLASSIC','COMPASS'].map(t=>'<option '+(t===options.hud?'selected':'')+'>'+t+'</option>').join('')+'</select></label><p>WASD / panah · Gerak<br>Space · Rem / berlindung<br>Klik · Serang &nbsp; F · Interaksi<br>V · Kendaraan &nbsp; TAB · Ganti tokoh<br>Z / X / C · Kru &nbsp; R · Radio &nbsp; ESC · Pause</p>';
+  return '<label>MUSIC <input type="range" min="0" max="100" data-setting="music" value="'+options.music+'"></label><label>SFX <input type="range" min="0" max="100" data-setting="sfx" value="'+options.sfx+'"></label><label>GRAPHICS <select data-setting="quality">'+['LOW','MEDIUM','HIGH'].map((t,i)=>'<option value="'+(i+1)+'" '+(i+1===options.quality?'selected':'')+'>'+t+'</option>').join('')+'</select></label><label>HUD <select data-setting="hud">'+['FADE','CLASSIC','COMPASS'].map(t=>'<option '+(t===options.hud?'selected':'')+'>'+t+'</option>').join('')+'</select></label><p>WASD / panah · Gerak<br>Space · Rem / berlindung<br>Klik · Serang &nbsp; F · Interaksi<br>V · Kendaraan<br>Z / X / C · Kru &nbsp; R · Radio &nbsp; ESC · Pause</p>';
 }
 function render(){
   document.body.dataset.scene=scene;
@@ -123,7 +128,7 @@ function render(){
     const illustration=document.createElement('canvas');
     illustration.width=360;
     illustration.height=103;
-    illustration.setAttribute('aria-label','Apartemen Dani dan Mara');
+    illustration.setAttribute('aria-label','Apartemen Dani');
     safehouse.before(illustration);
     drawInset(illustration);
     installRecords();
@@ -171,7 +176,6 @@ function ability(k){
 }
 function finishDebt(){
   s.grades.push(s.remaining>52?'G':s.remaining>20?'S':'B');s.cash+=350+s.debt*125;s.bank+=2000+s.debt*500;s.rp+=325;
-  if(s.debt%2===0) s.duo=Math.min(6,s.duo+1);
   s.debt++;s.stage=0;s.remaining=105;
   if(s.debt===12)roaming=true;
   save(slot);notify('Debt selesai · Progres tersimpan otomatis.');
@@ -210,7 +214,7 @@ function action(id){
   if(id.startsWith('slot-')){
     const i=Number(id.slice(5));
     if(mode==='load'&&slots[i]){slot=i;start(slots[i],slots[i].roaming);return;}
-    if(mode==='save'){save(i);tip='Progress disimpan ke SLOT '+(i+1)+'.';}
+    if(mode==='save'){save(i);tip='Progres disimpan ke SLOT '+(i+1)+'.';}
     else tip='Slot ini kosong.';
     pane='notice';
   }
@@ -218,7 +222,6 @@ function action(id){
   if(id==='title'){pane='';setScene('title');return;}
   if(id==='stats'){pane='';setScene('stats');return;}
   if(id==='back'){pane='';setScene(previous==='stats'?'title':previous);return;}
-  if(id==='switch'){s.who=1-s.who;notify('Sekarang bermain sebagai '+me()+'.');return;}
   if(id==='outfit'){s.heat=0;s.evidence=0;s.mask=false;s.career[5]++;tip='Pakaian diganti · Heat hilang.';pane='notice';}
   if(id.startsWith('ability-')){ability(id.at(-1));return;}
   if(id.startsWith('phone-'))phone=id.slice(6);
@@ -258,16 +261,14 @@ document.addEventListener('keydown',e=>{
   if(pane&&['input','select'].includes(e.target.tagName.toLowerCase())&&k!=='escape')return;
   if(k==='escape'){e.preventDefault();action(pane?'close':scene==='stats'?'back':'pause');return;}
   if(!runScenes.includes(scene))return;
-  if(['tab',' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
+  if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
   keys.add(k);if(e.repeat)return;
-  if(k==='tab')action('switch');
   if(k==='f'&&!pane)interact();
   if(k==='p')action('phone');
   if(k==='q')action('wheel');
   if(k==='m')action('stats');
-  if(k==='v'&&!pane){s.mode=(s.mode+1)%4;if(s.mode===1)s.evidence&=~1;if(s.mode===3){s.x=1085;s.y=510;}notify('Mode · '+['Mobil','Jalan kaki','Mara’s Kite','Jet ski'][s.mode]);}
+  if(k==='v'&&!pane){s.mode=(s.mode+1)%4;if(s.mode===1)s.evidence&=~1;if(s.mode===3){s.x=1085;s.y=510;}notify('Mode · '+['Mobil','Jalan kaki','Kite over Seribu','Jet ski'][s.mode]);}
   if(k==='r'){s.radio=(s.radio+1)%radio.length;render();}
-  if(k==='b'){s.evidence&=~4;s.heat=Math.max(0,s.heat-1);notify('Dani dan Mara berpisah.');}
   if('zxc'.includes(k)&&k.length===1)ability(k);
 });
 document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));

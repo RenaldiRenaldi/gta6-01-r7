@@ -1,5 +1,5 @@
 // Package Solmara's offline browser game and four Chromium captures for make.fun.
-// For a local package, run MAKEFUN_OUTPUT_DIR=out node main.ts from any directory.
+// For a local package, run MAKEFUN_OUTPUT_DIR=out node main.ts from the repository root.
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
