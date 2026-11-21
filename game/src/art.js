@@ -2,8 +2,10 @@ import {districts, position} from './data.js';
 const ctx = document.querySelector('#city').getContext('2d');
 let g = ctx;
 const ink = '#150f25';
-// Compare the standing sprite and the roof at the same depth.
-const personToCarScale = 1.2 * 97 / 190;
+// Use tire contact, not the car's body sill or shadow, as the ground line.
+const carRoofHeight = 48 + 49;
+const personHeight = 190;
+const personToCarScale = 1.18 * carRoofHeight / personHeight;
 function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h);}
 function oval(x,y,w,h,c){g.beginPath();g.ellipse(x,y,w,h,0,0,Math.PI*2);g.fillStyle=c;g.fill();}
 function poly(c,...points){g.beginPath();g.moveTo(...points[0]);for(const p of points.slice(1))g.lineTo(...p);g.closePath();g.fillStyle=c;g.fill();}
@@ -148,7 +150,7 @@ function boulevard(title, state, frame, quality, still){
   }
   if(title){
     car(770,700,.91,'#e57743');
-    person(865,743,.55);
+    person(865,743,.91*personToCarScale);
     return;
   }
   if(!still)return;
@@ -156,7 +158,7 @@ function boulevard(title, state, frame, quality, still){
   aircraft(592,266);
   rect(296,425,137,42,'#18243e');label('CLUB MERAH',305,445,17,'#ff9b8c');label('KUMALA STRAND',306,460,10,'#92f7e2');
   car(658,690,1.87,'#f16b34');
-  person(460,780,1.145);
+  person(460,780,1.87*personToCarScale);
 }
 function interior(vault, frame){
   rect(0,0,1280,860,gradient(0,860,'#201938','#63335d','#211b32'));
@@ -203,7 +205,7 @@ function interior(vault, frame){
     line('#fff4ab',2,[571,630],[851,492]);
     line('#ffd974',3,[571,630],[664,594]);
   }
-  person(459,739,.88,false,true);
+  person(459,739,1.43*personToCarScale,false,true);
   for(let i=0;i<47;i++){
     const x=300+rand(i+40)*690,y=300+(rand(i)*560+frame*1.2)%507;
     if((Math.abs(x-494)<55||Math.abs(x-812)<55)&&y>373&&y<500)continue;

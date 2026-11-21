@@ -47,7 +47,7 @@ canvas:has(+.safehouse){display:block;width:100%;height:auto;border:1px solid #8
 .abilities kbd{background:#ffd079}
 .hud-left{grid-template-areas:"objective" "roster" "vitals"}
 .hud-left .objective{grid-area:objective}.hud-left .roster{grid-area:roster}.hud-left .vitals{grid-area:vitals}
-.hud-map canvas{border-radius:11px;border-color:#e7bf73}
+.hud-map canvas{border-radius:50%;border-color:#e7bf73}
 body[data-scene=hero] .dialogue,.dialogue{bottom:3%;left:51%;width:min(410px,38vw)}
 .main-menu{top:39%;grid-template-columns:1fr;width:min(245px,34vw);gap:4px}
 .main-menu button{background:#101d32df;border-color:#739298;border-left-color:#f4bd6a;padding:4px 10px}
